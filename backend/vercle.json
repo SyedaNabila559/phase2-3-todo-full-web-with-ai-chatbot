@@ -3,14 +3,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "backend/main.py",  // Path to FastAPI app in backend folder
-      "use": "@vercel/python"    // Use the Python runtime
+      "src": "backend/main.py",  
+      "use": "@vercel/python"  
     }
   ],
   "routes": [
     {
-      "src": "/(.*)",           // Redirect all traffic to the FastAPI app
-      "dest": "backend/main.py" // Path to FastAPI entry point
+      "src": "/(.*)",           
+      "dest": "backend/main.py" 
     }
   ]
 }
