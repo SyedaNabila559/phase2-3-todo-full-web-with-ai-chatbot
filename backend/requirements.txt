@@ -7,3 +7,5 @@ pydantic-settings
 python-dotenv
 passlib[bcrypt]
 python-multipart
+cohere
+pydantic[email]

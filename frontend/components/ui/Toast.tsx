@@ -47,16 +47,18 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = React.useState<Toast[]>([]);
 
   const addToast = React.useCallback((toast: Omit<Toast, 'id'>) => {
-    const id = Date.now().toString();
+    // Generate unique ID using crypto.randomUUID
+    const id = crypto.randomUUID(); // Secure unique ID generation
+
     const newToast: Toast = {
       ...toast,
       id,
-      duration: toast.duration || 3000,
+      duration: toast.duration ?? 3000, // Default duration 3000ms
     };
 
     setToasts((prev) => [...prev, newToast]);
 
-    // Auto-dismiss after duration
+    // Auto-dismiss after the specified duration
     if (newToast.duration) {
       setTimeout(() => {
         setToasts((prev) => prev.filter((t) => t.id !== id));

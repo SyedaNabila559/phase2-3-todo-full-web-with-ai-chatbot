@@ -11,7 +11,6 @@ class ApiClient {
     console.log('API Client initialized with URL:', this.baseUrl);
   }
 
-  // Get JWT token from storage
   private getToken(): string | null {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('token');
@@ -19,7 +18,6 @@ class ApiClient {
     return null;
   }
 
-  // Check if token is expired
   private isTokenExpired(token: string): boolean {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
@@ -31,7 +29,6 @@ class ApiClient {
     }
   }
 
-  // Prepare headers with JWT token
   private getHeaders(): HeadersInit {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
@@ -45,7 +42,6 @@ class ApiClient {
     return headers;
   }
 
-  // Generic request method
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     const config: RequestInit = {
@@ -56,26 +52,23 @@ class ApiClient {
       },
     };
 
+    console.log('API Request:', url, config); // Debugging log
+
     try {
       const response = await fetch(url, config);
 
-      // Handle token expiration
       if (response.status === 401) {
         this.handleTokenExpiration();
         throw new Error('Authentication required');
       }
 
-      // No Content (204) responses have no body
-      if (response.status === 204) {
-        return {} as unknown as T;
-      }
+      if (response.status === 204) return {} as unknown as T;
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || `API request failed: ${response.status}`);
       }
 
-      // Some responses may have empty bodies; guard against invalid JSON
       const text = await response.text();
       if (!text) return {} as unknown as T;
       return JSON.parse(text) as T;
@@ -85,7 +78,6 @@ class ApiClient {
     }
   }
 
-  // Handle token expiration
   private handleTokenExpiration(): void {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('token');
@@ -94,13 +86,11 @@ class ApiClient {
     }
   }
 
-  // Auth methods
+  // Auth
   async signIn(email: string, password: string): Promise<{ user: any; token: string }> {
     const response = await fetch(`${this.baseUrl}/auth/sign-in`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     });
 
@@ -110,26 +100,17 @@ class ApiClient {
     }
 
     const data = await response.json();
-
-    // Store token and user name in localStorage
     if (typeof window !== 'undefined') {
       localStorage.setItem('token', data.token);
-      if (data.user?.full_name) {
-        localStorage.setItem('user_name', data.user.full_name);
-      } else if (data.user?.name) {
-        localStorage.setItem('user_name', data.user.name);
-      }
+      localStorage.setItem('user_name', data.user?.full_name || data.user?.name || '');
     }
-
     return data;
   }
 
   async signUp(email: string, password: string, name: string): Promise<{ user: any; token: string }> {
     const response = await fetch(`${this.baseUrl}/auth/sign-up`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password, name }),
     });
 
@@ -139,46 +120,33 @@ class ApiClient {
     }
 
     const data = await response.json();
-
-    // Store token and user name in localStorage
     if (typeof window !== 'undefined') {
       localStorage.setItem('token', data.token);
-      if (data.user?.full_name) {
-        localStorage.setItem('user_name', data.user.full_name);
-      } else if (data.user?.name) {
-        localStorage.setItem('user_name', data.user.name);
-      } else if (name) {
-        localStorage.setItem('user_name', name);
-      }
+      localStorage.setItem('user_name', data.user?.full_name || data.user?.name || name);
     }
-
     return data;
   }
 
   async signOut(): Promise<void> {
-    // Remove token from localStorage
     if (typeof window !== 'undefined') {
       localStorage.removeItem('token');
       localStorage.removeItem('user_name');
     }
-
-    // Call the backend logout endpoint if needed
     try {
       await this.request('/auth/logout', { method: 'POST' });
     } catch (error) {
-      // Even if the backend call fails, we still clear the local token
       console.error('Sign out error:', error);
     }
   }
 
-  // Todo methods
+  // Todos
   async getTodos(): Promise<Todo[]> {
-    const todos = await this.request<any[]>('/tasks/');
+    const todos = await this.request<any[]>('/todos/');
     return todos.map(this.mapTaskToTodo);
   }
 
   async createTodo(todoData: CreateTodoRequest): Promise<Todo> {
-    const task = await this.request<any>('/tasks/', {
+    const task = await this.request<any>('/todos/', {
       method: 'POST',
       body: JSON.stringify(todoData),
     });
@@ -186,7 +154,7 @@ class ApiClient {
   }
 
   async updateTodo(id: number, todoData: UpdateTodoRequest): Promise<Todo> {
-    const task = await this.request<any>(`/tasks/${id}`, {
+    const task = await this.request<any>(`/todos/${id}`, {
       method: 'PUT',
       body: JSON.stringify(todoData),
     });
@@ -194,13 +162,11 @@ class ApiClient {
   }
 
   async deleteTodo(id: number): Promise<void> {
-    await this.request(`/tasks/${id}`, {
-      method: 'DELETE',
-    });
+    await this.request(`/todos/${id}`, { method: 'DELETE' });
   }
 
   async toggleTodoComplete(id: number, completed: boolean): Promise<Todo> {
-    const task = await this.request<any>(`/tasks/${id}/complete`, {
+    const task = await this.request<any>(`/todos/${id}/complete`, {
       method: 'PATCH',
       body: JSON.stringify({ completed }),
     });
@@ -220,10 +186,10 @@ class ApiClient {
   }
 }
 
-// Create a singleton instance
+// Singleton instance
 export const apiClient = new ApiClient();
 
-// Export individual methods for convenience
+// Convenience exports
 export const signIn = apiClient.signIn.bind(apiClient);
 export const signUp = apiClient.signUp.bind(apiClient);
 export const signOut = apiClient.signOut.bind(apiClient);

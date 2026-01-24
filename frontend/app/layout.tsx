@@ -5,6 +5,9 @@ import { ThemeProvider } from '@/lib/theme'
 import { ToastProvider } from '@/components/ui/Toast'
 import Header from '@/components/layout/Header'
 import PageTransition from '@/components/layout/PageTransition'
+import { ChatProvider } from '@/components/chatbot/ChatProvider'
+import ChatButton from '@/components/chatbot/ChatButton'
+import ChatPanel from '@/components/chatbot/ChatPanel'
 
 /**
  * T009: Configure Outfit font (Premium, Geometric)
@@ -35,16 +38,21 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={outfit.className}>
-        <ThemeProvider>
-          <ToastProvider>
-            <Header />
-              <main>
-                <PageTransition>
-                  {children}
-                </PageTransition>
-              </main>
-          </ToastProvider>
-        </ThemeProvider>
+        <ChatProvider>
+          <ThemeProvider>
+            <ToastProvider>
+              <Header />
+                <main>
+                  <PageTransition>
+                    {children}
+                  </PageTransition>
+                </main>
+              {/* Chat components - positioned outside main content */}
+              <ChatButton />
+              <ChatPanel />
+            </ToastProvider>
+          </ThemeProvider>
+        </ChatProvider>
       </body>
     </html>
   )

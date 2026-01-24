@@ -256,11 +256,16 @@ New-Item -ItemType Directory -Path $featureDir -Force | Out-Null
 
 $template = Join-Path $repoRoot '.specify/templates/spec-template.md'
 $specFile = Join-Path $featureDir 'spec.md'
-if (Test-Path $template) { 
-    Copy-Item $template $specFile -Force 
-} else { 
-    New-Item -ItemType File -Path $specFile | Out-Null 
+if (Test-Path $template) {
+    Copy-Item $template $specFile -Force
+} else {
+    New-Item -ItemType File -Path $specFile | Out-Null
 }
+
+# Auto-create history/prompts/<branch-name>/ directory (same as specs/<branch-name>/)
+# This keeps naming consistent across branch, specs, and prompts directories
+$promptsDir = Join-Path $repoRoot 'history' 'prompts' $branchName
+New-Item -ItemType Directory -Path $promptsDir -Force | Out-Null
 
 # Set the SPECIFY_FEATURE environment variable for the current session
 $env:SPECIFY_FEATURE = $branchName

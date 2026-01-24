@@ -31,12 +31,13 @@ def verify_password(plain_password, hashed_password):
 def get_password_hash(password):
     return pwd_context.hash(password)
 
-def create_token(user_id: str) -> str:
+def create_token(user_id: str, email: str) -> str:
     # Use unix timestamps for exp/iat for better cross-platform compatibility
     now_ts = int(datetime.now(timezone.utc).timestamp())
     exp_ts = now_ts + 7 * 24 * 60 * 60
     payload = {
         "sub": user_id,
+        "email": email,
         "exp": exp_ts,
         "iat": now_ts,
     }
@@ -65,7 +66,7 @@ async def sign_up(request: SignUpRequest, session: SessionDep):
         traceback.print_exception(type(exc), exc, exc.__traceback__)
         raise HTTPException(status_code=500, detail="Failed to create user")
 
-    token = create_token(user.id)
+    token = create_token(user.id, user.email)
     return {"token": token, "user": {"id": user.id, "email": user.email, "name": user.name}}
 
 @router.post("/sign-in", response_model=AuthResponse)
@@ -76,7 +77,7 @@ async def sign_in(request: SignInRequest, session: SessionDep):
     if not user or not verify_password(request.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
-    token = create_token(user.id)
+    token = create_token(user.id, user.email)
     return {"token": token, "user": {"id": user.id, "email": user.email, "name": user.name}}
 
 
